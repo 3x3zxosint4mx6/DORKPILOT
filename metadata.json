@@ -1,0 +1,7 @@
+{
+  "name": "DorkPilot",
+  "description": "A specialized OSINT assistant for Canadian investigative journalists to design, test, and refine advanced Google dorks for public-interest reporting.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
