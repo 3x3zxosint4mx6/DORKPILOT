@@ -19,6 +19,254 @@ const toJulian = (dateStr: string): string => {
   return julian.toString();
 };
 
+const GeoPicker: React.FC<{ value: string; onChange: (val: string) => void }> = ({ value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [savedPresets, setSavedPresets] = useState<{ name: string; value: string }[]>([]);
+  const [newPresetName, setNewPresetName] = useState('');
+  const [customLocation, setCustomLocation] = useState('');
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Load saved presets
+    const saved = localStorage.getItem('dorkpilot_geo_presets');
+    if (saved) {
+      setSavedPresets(JSON.parse(saved));
+    }
+
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Try to extract custom location from value if it's not in GEOGRAPHIC_KEYWORDS
+  useEffect(() => {
+    if (value.startsWith('site:.ca (') && value.endsWith(')')) {
+      const content = value.slice(10, -1);
+      const parts = content.split(' OR ');
+      const knownValues = GEOGRAPHIC_KEYWORDS.map(k => k.value);
+      const custom = parts.find(p => !knownValues.includes(p));
+      if (custom) {
+        setCustomLocation(custom.replace(/"/g, ''));
+      } else {
+        setCustomLocation('');
+      }
+    }
+  }, [value]);
+
+  const updateValue = (nextKeywords: typeof GEOGRAPHIC_KEYWORDS, custom: string) => {
+    if (nextKeywords.length === 0 && !custom.trim()) {
+      onChange('site:.ca');
+    } else {
+      const parts = nextKeywords.map(k => k.value);
+      if (custom.trim()) {
+        parts.push(`"${custom.trim()}"`);
+      }
+      const combined = parts.join(' OR ');
+      onChange(`site:.ca (${combined})`);
+    }
+  };
+
+  const savePreset = () => {
+    if (!newPresetName.trim() || !value) return;
+    const newPresets = [...savedPresets, { name: newPresetName.trim(), value }];
+    setSavedPresets(newPresets);
+    localStorage.setItem('dorkpilot_geo_presets', JSON.stringify(newPresets));
+    setNewPresetName('');
+  };
+
+  const deletePreset = (index: number) => {
+    const newPresets = savedPresets.filter((_, i) => i !== index);
+    setSavedPresets(newPresets);
+    localStorage.setItem('dorkpilot_geo_presets', JSON.stringify(newPresets));
+  };
+
+  const loadPreset = (presetValue: string) => {
+    onChange(presetValue);
+  };
+
+  const selectedLabels = value === 'site:.ca' 
+    ? ['All Canada'] 
+    : [
+        ...GEOGRAPHIC_KEYWORDS.filter(k => value.includes(k.value)).map(k => k.label),
+        ...(customLocation ? [customLocation] : [])
+      ];
+
+  const toggleSelection = (geo: typeof GEOGRAPHIC_KEYWORDS[0]) => {
+    const currentKeywords = GEOGRAPHIC_KEYWORDS.filter(k => value.includes(k.value));
+    const isSelected = currentKeywords.some(k => k.label === geo.label);
+    
+    let nextKeywords = [];
+    if (isSelected) {
+      nextKeywords = currentKeywords.filter(k => k.label !== geo.label);
+    } else {
+      nextKeywords = [...currentKeywords, geo];
+    }
+    
+    updateValue(nextKeywords, customLocation);
+  };
+
+  const handleCustomLocationChange = (val: string) => {
+    setCustomLocation(val);
+    const currentKeywords = GEOGRAPHIC_KEYWORDS.filter(k => value.includes(k.value));
+    updateValue(currentKeywords, val);
+  };
+
+  const filteredOptions = GEOGRAPHIC_KEYWORDS.filter(geo => 
+    geo.label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const groupedOptions = {
+    province: filteredOptions.filter(o => o.type === 'province'),
+    region: filteredOptions.filter(o => o.type === 'region'),
+    city: filteredOptions.filter(o => o.type === 'city'),
+  };
+
+  return (
+    <div className="flex-1 relative" ref={wrapperRef}>
+      <div 
+        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2.5 text-sm focus-within:ring-2 focus-within:ring-emerald-500 focus-within:outline-none text-purple-400 font-medium shadow-inner cursor-pointer flex items-center justify-between min-h-[42px]"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="flex flex-wrap gap-1">
+          {selectedLabels.length > 0 ? (
+            selectedLabels.map(label => (
+              <span key={label} className="bg-purple-900/30 text-purple-300 px-1.5 py-0.5 rounded text-xs border border-purple-500/30">
+                {label}
+              </span>
+            ))
+          ) : (
+            <span className="text-slate-500 font-normal">Select Provinces/Territories...</span>
+          )}
+        </div>
+        <i className={`fas fa-chevron-down text-slate-600 transition-transform ml-2 ${isOpen ? 'rotate-180' : ''}`}></i>
+      </div>
+      
+      {isOpen && (
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-xl max-h-96 flex flex-col overflow-hidden">
+          <div className="p-2 border-b border-slate-800 bg-slate-950 space-y-2">
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <i className="fas fa-search absolute left-2 top-1/2 -translate-y-1/2 text-slate-600 text-[10px]"></i>
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  placeholder="Filter presets..."
+                  className="w-full bg-slate-900 border border-slate-700 rounded pl-7 pr-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                  autoFocus
+                  onClick={e => e.stopPropagation()}
+                />
+              </div>
+              <div className="flex-1 relative">
+                <i className="fas fa-location-dot absolute left-2 top-1/2 -translate-y-1/2 text-purple-500 text-[10px]"></i>
+                <input
+                  type="text"
+                  value={customLocation}
+                  onChange={e => handleCustomLocationChange(e.target.value)}
+                  placeholder="Custom Location..."
+                  className="w-full bg-slate-900 border border-slate-700 rounded pl-7 pr-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-purple-500"
+                  onClick={e => e.stopPropagation()}
+                />
+              </div>
+            </div>
+            
+            {/* Preset Saving UI */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newPresetName}
+                onChange={e => setNewPresetName(e.target.value)}
+                placeholder="Name current selection..."
+                className="flex-1 bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-purple-500"
+                onClick={e => e.stopPropagation()}
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  savePreset();
+                }}
+                disabled={!newPresetName.trim() || !value}
+                className="bg-purple-600 hover:bg-purple-500 disabled:bg-slate-800 disabled:text-slate-500 text-white px-2 py-1 rounded text-xs transition-colors"
+              >
+                Save
+              </button>
+            </div>
+
+            {/* Saved Presets List */}
+            {savedPresets.length > 0 && (
+              <div className="pt-1 pb-1 border-t border-slate-800">
+                <div className="text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1.5 px-1">Saved Presets</div>
+                <div className="flex flex-wrap gap-2">
+                  {savedPresets.map((preset, idx) => (
+                    <div key={idx} className="flex items-center bg-slate-800 rounded border border-slate-700 overflow-hidden">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          loadPreset(preset.value);
+                        }}
+                        className="px-2 py-1 text-[10px] text-purple-300 hover:bg-slate-700 transition-colors"
+                      >
+                        {preset.name}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deletePreset(idx);
+                        }}
+                        className="px-1.5 py-1 text-[10px] text-slate-500 hover:text-red-400 hover:bg-slate-700 border-l border-slate-700 transition-colors"
+                      >
+                        <i className="fas fa-times"></i>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="overflow-y-auto flex-1 p-1 custom-scrollbar bg-slate-900">
+            {(['province', 'region', 'city'] as const).map(group => (
+              groupedOptions[group].length > 0 && (
+                <div key={group} className="mb-2">
+                  <div className="px-3 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-slate-950/50 mb-1">
+                    {group}s
+                  </div>
+                  {groupedOptions[group].map(geo => {
+                    const isSelected = value.includes(geo.value);
+                    return (
+                      <div 
+                        key={geo.label}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSelection(geo);
+                        }}
+                        className={`flex items-center gap-2 px-3 py-1.5 text-xs cursor-pointer rounded hover:bg-slate-800 transition-colors ${isSelected ? 'text-emerald-400 bg-slate-800/50' : 'text-slate-300'}`}
+                      >
+                        <div className={`w-3 h-3 rounded border flex items-center justify-center flex-shrink-0 ${isSelected ? 'border-emerald-500 bg-emerald-500/20' : 'border-slate-600'}`}>
+                          {isSelected && <i className="fas fa-check text-[8px]"></i>}
+                        </div>
+                        <span>{geo.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            ))}
+            {filteredOptions.length === 0 && (
+              <div className="p-3 text-center text-xs text-slate-500">No regions found</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const DorkBuilder: React.FC<DorkBuilderProps> = ({ onAddDork }) => {
   const [parts, setParts] = useState<DorkPart[]>([
     { id: '1', operator: 'site:', value: 'gc.ca', enabled: true },
@@ -76,6 +324,11 @@ const DorkBuilder: React.FC<DorkBuilderProps> = ({ onAddDork }) => {
       lastYear.setFullYear(lastYear.getFullYear() - 1);
       const dateStr = lastYear.toISOString().split('T')[0];
       newSuggestions.push({ label: 'Recent Docs', op: 'after:', val: dateStr, icon: 'fa-calendar-days' });
+    }
+
+    const hasBefore = parts.some(p => p.enabled && p.operator === 'before:');
+    if (!hasBefore) {
+      newSuggestions.push({ label: 'Archive Search', op: 'before:', val: '2020-01-01', icon: 'fa-box-archive' });
     }
     
     const hasExclude = parts.some(p => p.enabled && p.operator === '- (Exclude)');
@@ -283,7 +536,7 @@ const DorkBuilder: React.FC<DorkBuilderProps> = ({ onAddDork }) => {
             <i className="fas fa-eraser"></i> Clear
           </button>
           <button 
-            onClick={addPart}
+            onClick={() => addPart()}
             className="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-600/30 px-3 py-1.5 rounded text-xs transition-colors flex items-center gap-2"
           >
             <i className="fas fa-plus"></i> Add Operator
@@ -351,7 +604,12 @@ const DorkBuilder: React.FC<DorkBuilderProps> = ({ onAddDork }) => {
               <div className="relative flex-shrink-0">
                 <select 
                   value={part.operator}
-                  onChange={(e) => updatePart(part.id, { operator: e.target.value, value: '' })}
+                  onChange={(e) => {
+                    const newOp = e.target.value;
+                    let newVal = '';
+                    if (newOp === 'Geo Scope:') newVal = 'site:.ca';
+                    updatePart(part.id, { operator: newOp, value: newVal });
+                  }}
                   className={`appearance-none bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:outline-none min-w-[150px] font-semibold transition-all cursor-pointer ${
                     part.operator === '- (Exclude)' || part.operator === '-site:' 
                       ? 'text-red-400 border-red-900/50 focus:ring-red-500' 
@@ -431,16 +689,10 @@ const DorkBuilder: React.FC<DorkBuilderProps> = ({ onAddDork }) => {
                     ))}
                   </select>
                 ) : part.operator === 'Geo Scope:' ? (
-                  <select
-                    value={part.value}
-                    onChange={(e) => updatePart(part.id, { value: e.target.value })}
-                    className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none text-purple-400 font-medium shadow-inner"
-                  >
-                    <option value="">Select Geographic Region...</option>
-                    {GEOGRAPHIC_KEYWORDS.map(geo => (
-                      <option key={geo.value} value={geo.value}>{geo.label}</option>
-                    ))}
-                  </select>
+                  <GeoPicker 
+                    value={part.value} 
+                    onChange={(val) => updatePart(part.id, { value: val })} 
+                  />
                 ) : part.operator === 'daterange:' ? (
                   <div className="flex-1 flex gap-3 items-center bg-slate-950 border border-slate-700 rounded-lg px-4 py-1.5 shadow-inner">
                     <div className="flex-1 flex flex-col">

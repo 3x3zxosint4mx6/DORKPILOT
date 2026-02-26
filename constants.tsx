@@ -85,11 +85,39 @@ export const SOURCE_TYPE_PRESETS = [
 ];
 
 export const GEOGRAPHIC_KEYWORDS = [
-  { label: 'GTA (Greater Toronto Area)', value: '"Greater Toronto Area" OR "GTA" OR "Toronto"' },
-  { label: 'GVA (Greater Vancouver Area)', value: '"Greater Vancouver Area" OR "GVA" OR "Vancouver"' },
-  { label: 'National Capital Region', value: '"National Capital Region" OR "NCR" OR "Ottawa" OR "Gatineau"' },
-  { label: 'Atlantic Canada', value: '"Atlantic Canada" OR "Maritimes" OR "Nova Scotia" OR "NB" OR "PEI" OR "NL"' },
-  { label: 'Western Canada', value: '"Western Canada" OR "Prairies" OR "Alberta" OR "BC" OR "Saskatchewan" OR "Manitoba"' }
+  // Regions
+  { label: 'GTA (Greater Toronto Area)', value: '"Greater Toronto Area" OR "GTA" OR "Toronto"', type: 'region' },
+  { label: 'GVA (Greater Vancouver Area)', value: '"Greater Vancouver Area" OR "GVA" OR "Vancouver"', type: 'region' },
+  { label: 'National Capital Region', value: '"National Capital Region" OR "NCR" OR "Ottawa" OR "Gatineau"', type: 'region' },
+  { label: 'Atlantic Canada', value: '"Atlantic Canada" OR "Maritimes" OR "Nova Scotia" OR "NB" OR "PEI" OR "NL"', type: 'region' },
+  { label: 'Western Canada', value: '"Western Canada" OR "Prairies" OR "Alberta" OR "BC" OR "Saskatchewan" OR "Manitoba"', type: 'region' },
+  
+  // Provinces & Territories
+  { label: 'Ontario', value: '"Ontario" OR "ON"', type: 'province' },
+  { label: 'Quebec', value: '"Quebec" OR "QC" OR "Québec"', type: 'province' },
+  { label: 'British Columbia', value: '"British Columbia" OR "BC"', type: 'province' },
+  { label: 'Alberta', value: '"Alberta" OR "AB"', type: 'province' },
+  { label: 'Manitoba', value: '"Manitoba" OR "MB"', type: 'province' },
+  { label: 'Saskatchewan', value: '"Saskatchewan" OR "SK"', type: 'province' },
+  { label: 'Nova Scotia', value: '"Nova Scotia" OR "NS"', type: 'province' },
+  { label: 'New Brunswick', value: '"New Brunswick" OR "NB"', type: 'province' },
+  { label: 'Newfoundland and Labrador', value: '"Newfoundland" OR "Labrador" OR "NL"', type: 'province' },
+  { label: 'Prince Edward Island', value: '"Prince Edward Island" OR "PEI" OR "P.E.I."', type: 'province' },
+  { label: 'Northwest Territories', value: '"Northwest Territories" OR "NWT" OR "N.W.T."', type: 'province' },
+  { label: 'Yukon', value: '"Yukon" OR "YT"', type: 'province' },
+  { label: 'Nunavut', value: '"Nunavut" OR "NU"', type: 'province' },
+
+  // Major Cities
+  { label: 'Toronto', value: '"Toronto" OR "YYZ"', type: 'city' },
+  { label: 'Ottawa', value: '"Ottawa" OR "YOW"', type: 'city' },
+  { label: 'Montreal', value: '"Montreal" OR "Montréal" OR "YUL"', type: 'city' },
+  { label: 'Vancouver', value: '"Vancouver" OR "YVR"', type: 'city' },
+  { label: 'Calgary', value: '"Calgary" OR "YYC"', type: 'city' },
+  { label: 'Edmonton', value: '"Edmonton" OR "YEG"', type: 'city' },
+  { label: 'Winnipeg', value: '"Winnipeg" OR "YWG"', type: 'city' },
+  { label: 'Quebec City', value: '"Quebec City" OR "Ville de Québec"', type: 'city' },
+  { label: 'Hamilton', value: '"Hamilton"', type: 'city' },
+  { label: 'Halifax', value: '"Halifax" OR "YHZ"', type: 'city' }
 ];
 
 export const DARK_WEB_RESOURCES: ResourceItem[] = [
@@ -161,6 +189,57 @@ export const OSINT_SEARCH_ENGINES: ResourceItem[] = [
     url: "https://www.binaryedge.io/",
     category: "Infrastructure",
     description: "Scans the entire internet to provide real-time threat intelligence."
+  }
+];
+
+export const SOCMINT_ENGINES: ResourceItem[] = [
+  {
+    name: "Social Searcher",
+    url: "https://www.social-searcher.com/",
+    category: "Social Search",
+    description: "Free social media search engine. Monitor mentions of users and keywords."
+  },
+  {
+    name: "Social Mention",
+    url: "http://socialmention.com/",
+    category: "Real-time Search",
+    description: "Real-time social media search and analysis."
+  },
+  {
+    name: "Snitch.name",
+    url: "http://snitch.name/",
+    category: "Profile Aggregator",
+    description: "A social white pages that searches across multiple social networks for a name."
+  },
+  {
+    name: "UserSearch.org",
+    url: "https://usersearch.org/",
+    category: "Username Search",
+    description: "Find people by username or email across hundreds of social media platforms."
+  },
+  {
+    name: "Sherlock",
+    url: "https://github.com/sherlock-project/sherlock",
+    category: "Username Search",
+    description: "Hunt down social media accounts by username across social networks."
+  },
+  {
+    name: "WhatsMyName",
+    url: "https://whatsmyname.app/",
+    category: "Username Search",
+    description: "Search for usernames on many websites."
+  },
+  {
+    name: "BoardReader",
+    url: "https://boardreader.com/",
+    category: "Forum Search",
+    description: "Search engine for forums and message boards."
+  },
+  {
+    name: "Omgili",
+    url: "https://omgili.com/",
+    category: "Forum Search",
+    description: "Finds 'interesting' things people say on forums, message boards, and other discussion sites."
   }
 ];
 

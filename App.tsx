@@ -2,15 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import DorkBuilder from './components/DorkBuilder';
 import DorkAssistant from './components/DorkAssistant';
-import VeoVideoGenerator from './components/VeoVideoGenerator';
-import LiveOSINT from './components/LiveOSINT';
+import BriefingVideo from './components/BriefingVideo';
+import VoiceIntel from './components/VoiceIntel';
 import MapsGrounding from './components/MapsGrounding';
+import Methodology from './components/Methodology';
 import { SavedDork } from './types';
-import { CANADIAN_RESOURCES, DARK_WEB_RESOURCES, COMMON_DORKS, OSINT_SEARCH_ENGINES } from './constants';
+import { CANADIAN_RESOURCES, DARK_WEB_RESOURCES, COMMON_DORKS, OSINT_SEARCH_ENGINES, SOCMINT_ENGINES } from './constants';
 
 const App: React.FC = () => {
   const [savedDorks, setSavedDorks] = useState<SavedDork[]>([]);
-  const [activeTab, setActiveTab] = useState<'build' | 'assistant' | 'visualize' | 'live' | 'resources' | 'engines' | 'library'>('build');
+  const [activeTab, setActiveTab] = useState<'build' | 'assistant' | 'visualize' | 'live' | 'resources' | 'engines' | 'socmint' | 'library' | 'methodology'>('build');
 
   useEffect(() => {
     const saved = localStorage.getItem('dorkpilot_saved');
@@ -35,11 +36,11 @@ const App: React.FC = () => {
       <aside className="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col p-6 sticky top-0 h-auto md:h-screen">
         <div className="flex items-center gap-3 mb-10">
           <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-900/20">
-            <i className="fas fa-search-nodes text-xl"></i>
+            <i className="fas fa-trash-can text-xl"></i>
           </div>
           <div>
-            <h1 className="font-bold text-lg tracking-tight">DorkPilot</h1>
-            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Investigative OSINT</p>
+            <h1 className="font-bold text-lg tracking-tight">dumpsterdiver</h1>
+            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">OSINT Investigative Suite</p>
           </div>
         </div>
 
@@ -98,6 +99,20 @@ const App: React.FC = () => {
             <i className="fas fa-search"></i>
             <span className="font-medium">OSINT Engines</span>
           </button>
+          <button 
+            onClick={() => setActiveTab('socmint')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'socmint' ? 'bg-emerald-600/10 text-emerald-400 border border-emerald-600/20' : 'text-slate-400 hover:bg-slate-800'}`}
+          >
+            <i className="fas fa-users-viewfinder"></i>
+            <span className="font-medium">SOCMINT Hub</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('methodology')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${activeTab === 'methodology' ? 'bg-emerald-600/10 text-emerald-400 border border-emerald-600/20' : 'text-slate-400 hover:bg-slate-800'}`}
+          >
+            <i className="fas fa-clipboard-list"></i>
+            <span className="font-medium">Methodology</span>
+          </button>
         </nav>
       </aside>
 
@@ -137,7 +152,7 @@ const App: React.FC = () => {
                 </p>
               </div>
               <MapsGrounding />
-              <VeoVideoGenerator />
+              <BriefingVideo />
             </div>
           )}
 
@@ -149,7 +164,7 @@ const App: React.FC = () => {
                   Real-time voice-to-voice intelligence briefing for hands-free reconnaissance.
                 </p>
               </div>
-              <LiveOSINT />
+              <VoiceIntel />
             </div>
           )}
 
@@ -163,6 +178,35 @@ const App: React.FC = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {OSINT_SEARCH_ENGINES.map((res, i) => (
+                  <a 
+                    key={i} 
+                    href={res.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="bg-slate-900 p-5 rounded-xl border border-slate-800 hover:border-emerald-500 group transition-all"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-[10px] px-2 py-0.5 bg-slate-800 rounded text-emerald-400 font-bold uppercase">{res.category}</span>
+                      <i className="fas fa-arrow-up-right-from-square text-slate-600 group-hover:text-emerald-500 transition-colors"></i>
+                    </div>
+                    <h3 className="font-bold text-slate-100 mb-2">{res.name}</h3>
+                    <p className="text-sm text-slate-400 leading-relaxed">{res.description}</p>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'socmint' && (
+            <div className="space-y-6">
+              <div className="bg-gradient-to-r from-emerald-900/20 to-transparent p-6 rounded-xl border border-emerald-600/20">
+                <h2 className="text-2xl font-bold mb-2">SOCMINT Hub</h2>
+                <p className="text-slate-400 text-sm">
+                  Social Media Intelligence tools for profile discovery, username tracking, and forum research.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {SOCMINT_ENGINES.map((res, i) => (
                   <a 
                     key={i} 
                     href={res.url} 
@@ -220,6 +264,10 @@ const App: React.FC = () => {
                 </div>
               )}
             </div>
+          )}
+
+          {activeTab === 'methodology' && (
+            <Methodology />
           )}
 
           {activeTab === 'resources' && (
@@ -286,7 +334,7 @@ const App: React.FC = () => {
 
       {/* Footer Branding */}
       <footer className="fixed bottom-0 left-0 right-0 p-4 text-center text-slate-600 text-[10px] uppercase tracking-[0.2em] font-bold border-t border-slate-900 bg-slate-950/80 backdrop-blur-md z-10 hidden md:block">
-        DorkPilot &copy; {new Date().getFullYear()} &bull; Professional OSINT Assistant for Journalists
+        dumpsterdiver &copy; {new Date().getFullYear()} &bull; Professional OSINT Investigative Suite
       </footer>
     </div>
   );

@@ -1,7 +1,9 @@
 {
-  "name": "DorkPilot",
+  "name": "dumpsterdiver",
   "description": "A specialized OSINT assistant for Canadian investigative journalists to design, test, and refine advanced Google dorks for public-interest reporting.",
   "requestFramePermissions": [
-    "geolocation"
+    "geolocation",
+    "microphone",
+    "camera"
   ]
 }
